@@ -34,11 +34,11 @@
   <p>This worksheet is for ACP-sanctioned brevets between 200 and 1000 kilometers</p>
 
   <!--
-  -- If there are any warnings or other messages from a prior
-  -- request to the server, 
-  -- they appear above the rest of the content, just until the next 
-  -- action.  (This is only on request/response transactions that
-  -- result in regenerating the page, not on every xmlhttp request.) 
+    If there are any warnings or other messages from a prior
+    request to the server, 
+    they appear above the rest of the content, just until the next 
+    action.  (This is only on request/response transactions that
+    result in regenerating the page, not on every xmlhttp request.)  
   -->
 
 {% with messages = get_flashed_messages() %}
@@ -63,7 +63,7 @@
     <option value="600">600km</option>
     <option value="1000">1000km</option>
   </select>
-  </div> <!-- columns 1--4  -->
+  </div> <!-- columns 1-4  -->
   <div class="col-md-6">
     <label>Begins at</label>
     <input type=date name="begin_date" id="begin_date" value="2017-01-01" />
@@ -71,14 +71,14 @@
   </div> <!-- columns 5-10 -->
   </div> <!-- row -->
 
-  <br />  <!-- Cosmetic -- a little vertical space -->
+  <br />  <!-- Cosmetic - a little vertical space -->
   <!-- Although we do not use tables for general page layout, they are
        appropriate for something that really is a table, like this
        one.  We allocate it the full 12 columns of the bootstrap grid.
   -->
   <div class="row">
   <div class="col-md-12"> 
-  <table class="control_time_table">
+  <table class="control_time_table" id="time_table">
       <tr>
 	<th> Miles </th>
 	<th> Km </th>
@@ -94,7 +94,7 @@
            min="0" max="900" size="5" /></td>
       <!-- Dist (km) -->
       <td><input name="km" type="text"
-	   min="0" max="1100" size="5" /> </td>
+	   min="0" max="1200" size="5" /> </td>
       <!-- Location (optional) -->
       <td><input name="location" type="text" 
         placeholder="Optional location name"
@@ -124,20 +124,37 @@
   // stash them in hidden fields.) 
   function calc_times(control) {
     var km = control.find("input[name='km']").val();
+    var brevet_dist_km = document.getElementById('brevet_dist_km').value;
+    console.log("Brevet Distance: "+brevet_dist_km);
+    var start_date = document.getElementById('begin_date').value;
+    console.log("Start Date: "+start_date);
+    var start_time = document.getElementById('begin_time').value;
+    console.log("Start Time: "+start_time);
+    var full_start_time = start_date.concat(" ").concat(start_time);
+    console.log("Full Start Time: "+full_start_time);
     var open_time_field = control.find("input[name='open']");
     var close_time_field = control.find("input[name='close']");
-    
-    $.getJSON(TIME_CALC_URL, { km: km }, 
-      // response handler
-      function(data) {
-         var times = data.result;
-         console.log("Got a response: " +  times);
-         console.log("Response.open = " + times.open);
-         open_time_field.val( moment(times.open).format("ddd M/D H:mm"));
-         close_time_field.val( moment(times.close).format("ddd M/D H:mm"));
-       } // end of handler function
-     );// End of getJSON
+    var start = moment(full_start_time, "YYYY-MM-DD HH:mm").utc().toJSON();
+    console.log("Moment Start Time: "+start);
+    if (km){
+        if (km > brevet_dist_km*1.2) {
+            open_time_field.val("");
+            close_time_field.val("");
+        }
+        else {
+        $.getJSON(TIME_CALC_URL, { km: km, brevet_dist_km: brevet_dist_km, start_time: start },
+        // response handler
+        function(data) {
+           var times = data.result;
+           console.log("Got a response: " +  times);
+           console.log("Response.open = " + times.open);
+           open_time_field.val( moment(times.open).format("ddd M/D H:mm"));
+           close_time_field.val( moment(times.close).format("ddd M/D H:mm"));
+        } // end of handler function
+        );// End of getJSON
+        }
     }
+  }
 
   $(document).ready(function(){
    // Do the following when the page is finished loading
@@ -165,8 +182,22 @@
              // Then calculate times for this entry
              calc_times(control_entry);
           });
-
+      
+       
      });   // end of what we do on document ready
+  
+  var change_func = function() {
+                        $('#time_table').find('tr.control').each(
+                            function(input, element) {
+                            if($(element).find('input[name="km"]').val()) {
+                                calc_times($(element));
+                            }
+                        });
+                    };
+
+  $('select[name="distance"]').change(change_func);
+  $('input[name="begin_date"]').change(change_func);
+  $('input[name="begin_time"]').change(change_func);
 
 </script>
 

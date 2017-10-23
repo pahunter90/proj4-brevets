@@ -104,7 +104,7 @@
       <!-- Close time (read only, set by JavaScript function -->
       <td><input name="close" type="datetime" value="" readonly /></td>
       <!-- Notes (error messages for this row) -->
-      <td class="notes"> &nbsp; </td>
+      <td class="notes"></td>
     </tr>
     {% endfor %}
   </table>
@@ -134,12 +134,20 @@
     console.log("Full Start Time: "+full_start_time);
     var open_time_field = control.find("input[name='open']");
     var close_time_field = control.find("input[name='close']");
+    var notes_field = control.find(".notes");
+    notes_field.html("");
     var start = moment(full_start_time, "YYYY-MM-DD HH:mm").utc().toJSON();
     console.log("Moment Start Time: "+start);
     if (km){
-        if (km > brevet_dist_km*1.2) {
+        if (km < 0) {
             open_time_field.val("");
             close_time_field.val("");
+            notes_field.html("You can't ride your bike backwards!");
+        }
+        else if (km > brevet_dist_km*1.2) {
+            open_time_field.val("");
+            close_time_field.val("");
+            notes_field.html("This distance is too far for this brevet!");
         }
         else {
         $.getJSON(TIME_CALC_URL, { km: km, brevet_dist_km: brevet_dist_km, start_time: start },
@@ -153,6 +161,11 @@
         } // end of handler function
         );// End of getJSON
         }
+    }
+    else {
+        open_time_field.val("");
+        close_time_field.val("");
+        notes_field.html("");
     }
   }
 

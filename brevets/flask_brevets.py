@@ -56,11 +56,9 @@ def _calc_times():
     brevet_dist_km = request.args.get('brevet_dist_km', type=int)
     start_time = arrow.get(request.args.get('start_time'))
     app.logger.debug("km={}".format(km))
+    app.logger.debug("brevet_dist_km={}".format(brevet_dist_km))
+    app.logger.debug("start_time={}".format(start_time))
     app.logger.debug("request.args: {}".format(request.args))
-    # FIXME: These probably aren't the right open and close times
-    # and brevets may be longer than 200km
-    if km > brevet_dist_km:
-        km = brevet_dist_km
     open_time = acp_times.open_time(km, brevet_dist_km, start_time)
     close_time = acp_times.close_time(km, brevet_dist_km, start_time)
     result = {"open": open_time, "close": close_time}
